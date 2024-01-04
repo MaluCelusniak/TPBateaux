@@ -163,7 +163,6 @@ void tempsLocation() {
 
     Duree somMoins = Moins(SomHr, SomHd);
 
-    // esse ta funcionando
     printf("le temps total d'occupation est: %d:%02d\n", somMoins.nbHeures, somMoins.nbMinutes);
 
     //{Etat Final : on a affiche le temps total de location des bateaux durant la journee ecoulee}
@@ -178,69 +177,68 @@ void locationsInf2h() {
 
     demarrer(&Rd);
     demarrer(&Rr);
-    while (bc(&Rd).num != MARQUE.num)
-    {
+
+    int numLocationInfDeux = 0;
+    
+    while (bc(&Rd).num != MARQUE.num) {
         SomHd = Plus(SomHd, bc(&Rd).h);
         SomHr = Plus(SomHr, bc(&Rr).h);
+
+        Duree somMoins = Moins(SomHr, SomHd);
+
+        if (somMoins.nbHeures < 2) {
+            numLocationInfDeux++;
+        }
 
         avancer(&Rd);
         avancer(&Rr);
     };
 
-    Duree somMoins = Moins(SomHr, SomHd);
-
-    int numLocationInfDeux = 0;
-
-    int minTotal = somMoins.nbHeures * 60 + somMoins.nbMinutes;
-
-    if (minTotal < 120)
-    {
-        numLocationInfDeux++;
-    }
-    // o número da variavel esta indo como 0 mas era pra ser 2
     printf("Le nombre de locations dont la durée de location est inférieure à 2 heures: %d\n", numLocationInfDeux);
 }
 
 void creerLocations() {
    
     //--{Création du Ruban des locations}
-
+    Location l;
     printf("La séquence des locations est\n");
-
-    while (bc(&Rd).num > MARQUE.num)
+    demarrer(&Rd);
+    demarrer(&Rr);
+    amorcerL(&Rl);
+    while (bc(&Rd).num != MARQUE.num)
     {
+        
+        printf("barco num: %d", bc(&Rd).num);
         // Afficher le segment de temps de début de location
-        printf("< %d , < %d , %d > >   ", bc(&Rd).num, bc(&Rd).h.heures, bc(&Rd).h.minutes);
-
-        printf("< %d , < %d , %d > >   ", bc(&Rr).num, bc(&Rr).h.heures, bc(&Rr).h.minutes);
-        // Afficher la location
-        // Tentar trocar por função afficher un ruban bateaux
-
-        // Vérifier s'il y a un segment de temps de fin de location
-        // Não precisa verificar porque obrigatoriamente existe o horario de fim?
-        if (bc(&Rr).num + 1 < MARQUE.num)
-        {
-            if (bc(&Rr) < bc(&Rd)) // Rd + 1 -> Não sei como fazer mais um
-            {
-                // Afficher le segment de temps de fin de location
-                printf("< %d , %d >   ", bc(&Rr).h.heures, bc(&Rr).h.minutes);
-            };
-        };
+        printf("< %d , < %d , %d >  ", bc(&Rd).num, bc(&Rd).h.heures, bc(&Rd).h.minutes);
+        printf("< %d , %d > >   \n", bc(&Rr).h.heures, bc(&Rr).h.minutes);
+        l.num = bc(&Rd).num;
+        l.depart.heures = bc(&Rd).h.heures;
+        l.depart.minutes = bc(&Rd).h.minutes;
+        l.retour.heures = bc(&Rr).h.heures;
+        l.retour.minutes = bc(&Rr).h.minutes;
+        enregistrerL(&Rl, l);
+        avancer(&Rd);
+        avancer(&Rr);
     };
+        marquerL(&Rl);
 
     printf("\n");
 
 
 }
 
-void afficheUnRubanLocations(RubanLocations *rl)
+void afficheUnRubanLocations(RubanLocations* rl)
 {
     Location l;
+    // demarrer(&Rd);
+    // demarrer(&Rr);
     demarrerL(rl);
     while (lc(rl).num != LMARQUE.num)
     {
         l = lc(rl);
         printf("< %d , < %d:%02d , %d:%02d > > ", l.num, l.depart.heures, l.depart.minutes, l.retour.heures, l.retour.minutes);
+        
         avancerL(rl);
     }
     fermerL(rl);
@@ -251,19 +249,42 @@ void afficheUnRubanLocations(RubanLocations *rl)
 void afficherLocations () {
     //--{Affihage du Ruban des locations}
 
-
-    //--{Affichage du Ruban des locations}
-
     printf("-------------------------\n");
     printf("Affichage des Locations\n");
     printf("-------------------------\n");
     afficheUnRubanLocations(&Rl);
-    //------------------------ à rédiger   -----------------------
 
 }
 
 void tempsMaxAttente () {
-    //
+    // Function to calculate the wait time between two rentals in minutes
+    //era pra ser currentRental e previousRental mas não sei como botar previous
+    int calculateWaitTime(lc) { 
+        return (lc(&Rl).depart.heures - previousRental->endTime.heures) * 60 +
+            (lc(&Rl).depart.heures - previousRental->endTime.minutes);
+    }
+
+    // Function to calculate the maximum wait time for a boat
+    int calculateMaxWaitTime(lc(&Rl).departs, lc(&Rl).retours, int numBateaux) {
+        int maxWaitTime = 0;
+        int currentWaitTime = 0;
+
+        for (int i = 1; i < MARQUE.num; ++i) {
+            if (lc(&Rl).num == numBateaux) {
+                currentWaitTime = calculateWaitTime(&returns->rentals[i - 1], &departures->rentals[i]);
+                if (currentWaitTime > maxWaitTime) {
+                    maxWaitTime = currentWaitTime;
+                }
+            }
+        }
+
+        return maxWaitTime;
+    }
+
+     for (int numBateaux = 1; numBateaux <= numBoats; ++numBateaux) {
+        int maxWaitTime = calculateMaxWaitTime(&boatDepartures, &boatReturns, numBateaux);
+        printf("bateau numéro %d: attente la plus longue : %d minutes\n", numBateaux, maxWaitTime);
+    }
 
 }
 
